@@ -12,7 +12,8 @@ interface Space {
 interface BoardGameProps {
   currentPosition: number;
   playerName: string;
-  numSpaces?: number; // Allow variable number of spaces
+  numSpaces?: number;
+  playerCharacter: string;
 }
 
 // Custom board layout from text grid
@@ -41,6 +42,8 @@ const BOARD_TEXT = `
 function parseBoardText(boardText: string): { x: number; y: number }[] {
   const lines = boardText.trim().split('\n');
   const coords: { x: number; y: number }[] = [];
+  
+  // First pass: collect all coordinates in order of appearance
   for (let y = 0; y < lines.length; y++) {
     for (let x = 0; x < lines[y].length; x++) {
       if (lines[y][x] === '1') {
@@ -48,13 +51,44 @@ function parseBoardText(boardText: string): { x: number; y: number }[] {
       }
     }
   }
+  
   return coords;
+}
+
+// Function to calculate distance between two points
+function calculateDistance(x1: number, y1: number, x2: number, y2: number): number {
+  return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+}
+
+// Function to find the next space in the path
+function findNextSpace(currentSpace: Space | undefined, allSpaces: Space[]): Space | undefined {
+  if (!currentSpace) return allSpaces[0];
+
+  // Find the closest space that hasn't been visited yet
+  let closestSpace: Space | undefined;
+  let minDistance = Infinity;
+
+  for (const space of allSpaces) {
+    // Skip the current space
+    if (space.id === currentSpace.id) continue;
+
+    const distance = calculateDistance(currentSpace.x, currentSpace.y, space.x, space.y);
+    
+    // If this space is closer and hasn't been visited yet
+    if (distance < minDistance && space.id > currentSpace.id) {
+      minDistance = distance;
+      closestSpace = space;
+    }
+  }
+
+  return closestSpace;
 }
 
 const GRID_SIZE = BOARD_TEXT.trim().split('\n')[0].length;
 
-const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numSpaces = 50 }) => {
+const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numSpaces = 50, playerCharacter }) => {
   const [spaces, setSpaces] = useState<Space[] | null>(null);
+  const [currentSpace, setCurrentSpace] = useState<Space | undefined>();
 
   useEffect(() => {
     // Use the custom board layout
@@ -63,13 +97,14 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
       const id = i + 1;
       let type: 'normal' | 'prize' | 'special' = 'normal';
       let description = '';
-      // Add more fun: randomly assign special effects
       let funEffect: 'sparkle' | 'butterfly' | 'ripple' | 'duck' | null = null;
-      if (id === 5 || id === 15 || id === 25) {
+      
+      // Add special spaces along the path
+      if (id % 10 === 0) {
         type = 'prize';
         description = '🦆 Golden Duck!';
         funEffect = 'sparkle';
-      } else if (id === 10 || id === 20) {
+      } else if (id % 7 === 0) {
         type = 'special';
         description = '🦢 Swan Surprise!';
         funEffect = 'butterfly';
@@ -78,10 +113,21 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
       } else if (id % 9 === 0) {
         funEffect = 'duck';
       }
+      
       return { id, type, description, x, y, funEffect } as Space & { funEffect?: string };
     });
     setSpaces(newSpaces);
   }, []);
+
+  // Update current space when currentPosition changes
+  useEffect(() => {
+    if (spaces) {
+      const space = spaces.find(s => s.id === currentPosition);
+      if (space) {
+        setCurrentSpace(space);
+      }
+    }
+  }, [currentPosition, spaces]);
 
   if (!spaces) {
     return <div className="flex items-center justify-center h-64 text-xl">Loading duck map...</div>;
@@ -92,7 +138,7 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
 
   return (
     <div
-      className="overflow-auto max-h-[80vh] max-w-[80vw] p-2 bg-transparent"
+      className="overflow-visible max-h-[80vh] p-2 bg-transparent -ml-16 pl-16"
       style={{ width: `${GRID_SIZE * 3}rem`, height: `${GRID_SIZE * 3}rem` }}
     >
       <div className="mb-4 text-center">
@@ -103,11 +149,11 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
         <p className="text-md">Current Position: <span className="font-bold">{currentPosition}</span></p>
       </div>
       <div
-        className="grid"
+        className="grid mx-auto"
         style={{
-          gridTemplateColumns: `repeat(${GRID_SIZE}, 3rem)`,
-          width: `${GRID_SIZE * 3}rem`,
-          height: `${GRID_SIZE * 3}rem`,
+          gridTemplateColumns: `repeat(${GRID_SIZE}, 2rem)`,
+          width: `${GRID_SIZE * 2}rem`,
+          height: `${GRID_SIZE * 2}rem`,
         }}
       >
         {Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, idx) => {
@@ -144,11 +190,11 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
             return (
               <div
                 key={idx}
-                className={`w-12 h-12 flex flex-col items-center justify-center shadow-md text-xs relative overflow-hidden bg-transparent`}
+                className={`w-8 h-8 flex flex-col items-center justify-center shadow-md text-xs relative overflow-hidden bg-transparent`}
                 title={space.description || undefined}
               >
                 <img src="/Lillypad.png" alt="Lillypad" className="w-full h-full object-contain" />
-                {isPlayer && <span className="absolute top-0 left-0 right-0 text-center text-lg">👑</span>}
+                {isPlayer && <span className="absolute top-0 left-0 right-0 text-center text-lg animate-bounce">{playerCharacter}</span>}
                 {overlay}
               </div>
             );
@@ -157,14 +203,14 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
             return (
               <div
                 key={idx}
-                className="w-12 h-12 bg-transparent"
+                className="w-8 h-8 bg-transparent"
               />
             );
           }
         })}
       </div>
       <div className="mt-6 text-center text-lg font-bold text-yellow-700">
-        🏁 Finish Line at Space {numSpaces}! Good luck, duck!
+        🏁 Finish Line at Space {spaces.length}! Good luck, duck!
       </div>
     </div>
   );
