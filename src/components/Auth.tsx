@@ -1,0 +1,156 @@
+import React, { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import bcrypt from 'bcryptjs';
+import { useRouter } from 'next/navigation';
+
+const Auth = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const router = useRouter();
+
+  // Compare password
+  const comparePassword = (password: string, hash: string) => bcrypt.compareSync(password, hash);
+
+  // Signup (uses API route)
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Unknown error');
+      setMessage(result.message);
+    } catch (error: any) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Login (still client-side)
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+
+    try {
+      // Fetch user by email
+      const { data: user, error } = await supabase
+        .from('User')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (!user) {
+        setMessage('Invalid email or password.');
+        setLoading(false);
+        return;
+      }
+
+      // Compare password
+      const isValid = comparePassword(password, user.password);
+
+      if (!isValid) {
+        setMessage('Invalid email or password.');
+        setLoading(false);
+        return;
+      }
+
+      setMessage('Login successful!');
+      router.push('/game'); // Redirect to /game page
+    } catch (error: any) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
+      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-2xl">
+        <div className="text-center">
+          <h2 className="text-4xl font-extrabold text-gray-900 mb-2">
+            QuickQuack Game
+          </h2>
+          <p className="text-gray-600 mb-8">Join the adventure!</p>
+        </div>
+        <form className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 block w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 block w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+          </div>
+          {message && (
+            <div className="p-4 rounded-lg text-sm text-center bg-blue-100 text-blue-700">
+              {message}
+            </div>
+          )}
+          <div className="flex flex-col space-y-4">
+            <button
+              onClick={handleSignIn}
+              disabled={loading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Loading...' : 'Sign In'}
+            </button>
+            <button
+              onClick={handleSignUp}
+              disabled={loading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Loading...' : 'Create Account'}
+            </button>
+          </div>
+        </form>
+
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600">
+            By signing in, you agree to our{' '}
+            <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              Terms of Service
+            </a>{' '}
+            and{' '}
+            <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              Privacy Policy
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Auth; 

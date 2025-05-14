@@ -1,0 +1,33 @@
+# QuickQuack Game
+
+A fun board game for coworkers where players move their characters based on real-life sales achievements. Players can roll dice to move forward on the board and collect prizes from special tiles.
+
+## Features (Planned)
+- User authentication for coworkers
+- Character selection
+- Interactive board game
+- Dice rolling mechanics
+- Prize tiles
+- Sales achievement tracking
+
+## Tech Stack
+- Next.js
+- TypeScript
+- Vercel for deployment
+- Tailwind CSS for styling
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+## Development
+This project is built with Next.js and TypeScript, providing a modern and type-safe development experience.
