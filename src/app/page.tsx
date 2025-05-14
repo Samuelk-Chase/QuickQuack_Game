@@ -10,6 +10,7 @@ export default function Home() {
   const [player, setPlayer] = useState<Player | null>(null);
   const [characterName, setCharacterName] = useState('');
   const [showCharacterForm, setShowCharacterForm] = useState(false);
+  const [selectedCharacter, setSelectedCharacter] = useState('🐿️');
 
   useEffect(() => {
     // Check active sessions and sets the user
@@ -119,7 +120,11 @@ export default function Home() {
             Logout
           </button>
         </div>
-        <BoardGame currentPosition={player.position} playerName={player.character_name} />
+        <BoardGame 
+          currentPosition={player.position} 
+          playerName={player.character_name} 
+          playerCharacter={selectedCharacter}
+        />
       </div>
     </main>
   );
