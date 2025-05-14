@@ -42,29 +42,17 @@ const Auth = () => {
     setMessage('');
 
     try {
-      // Fetch user by email
-      const { data: user, error } = await supabase
-        .from('User')
-        .select('*')
-        .eq('email', email)
-        .single();
-
-      if (!user) {
-        setMessage('Invalid email or password.');
-        setLoading(false);
-        return;
-      }
-
-      // Compare password
-      const isValid = comparePassword(password, user.password);
-
-      if (!isValid) {
-        setMessage('Invalid email or password.');
-        setLoading(false);
-        return;
-      }
+      // Call the new login API route
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Unknown error');
 
       setMessage('Login successful!');
+      localStorage.setItem('session', JSON.stringify({ email: result.email })); // Store session
       router.push('/game'); // Redirect to /game page
     } catch (error: any) {
       setMessage(error.message);
