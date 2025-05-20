@@ -12,6 +12,33 @@ export default function Home() {
   const [showCharacterForm, setShowCharacterForm] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState('🐿️');
 
+  // Add the characters array here
+  const characters = [
+    { id: 0, emoji: '🐿️', name: 'Squirrel' },
+    { id: 1, emoji: '🦆', name: 'Duck' },
+    { id: 2, emoji: '🦢', name: 'Swan' },
+    { id: 3, emoji: '🐸', name: 'Frog' },
+    { id: 4, emoji: '🦉', name: 'Owl' },
+    { id: 5, emoji: '🦊', name: 'Fox' },
+    { id: 6, emoji: '🦝', name: 'Raccoon' },
+    { id: 7, emoji: '🦡', name: 'Badger' },
+    { id: 8, emoji: '🦫', name: 'Beaver' },
+    { id: 9, emoji: '🦦', name: 'Otter' },
+    { id: 10, emoji: '🦥', name: 'Sloth' },
+    { id: 11, emoji: '🦨', name: 'Skunk' },
+    { id: 12, emoji: '🦘', name: 'Kangaroo' },
+    { id: 13, emoji: '🦙', name: 'Llama' },
+    { id: 14, emoji: '🦒', name: 'Giraffe' }
+  ];
+
+  // For a single player, just use an array with that player
+  const players = player ? [{
+    user_id: Number(player.id), // Convert string id to number user_id
+    name: player.name,
+    character: player.character_id, // Use character_id as character
+    position: player.position,
+  }] : [];
+
   useEffect(() => {
     // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -124,6 +151,8 @@ export default function Home() {
           currentPosition={player.position} 
           playerName={player.name} 
           playerCharacter={selectedCharacter}
+          players={players}
+          characters={characters}
         />
       </div>
     </main>
