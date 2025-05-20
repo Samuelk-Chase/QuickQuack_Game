@@ -13,6 +13,7 @@ export type Player = {
   id: string
   email: string
   name: string
+  character_id: number
   position: number
   created_at: string
 }
@@ -40,15 +41,15 @@ export async function updatePlayerPosition(userId: string, newPosition: number) 
   return data as Player
 }
 
-export async function createPlayer(userId: string, email: string, characterName: string) {
+export async function createPlayer(userId: string, email: string, characterId: number, initialPosition: number = 1) {
   const { data, error } = await supabase
     .from('User')
     .insert([
       {
         id: userId,
         email,
-        name: characterName,
-        position: 1
+        character_id: characterId,
+        position: initialPosition
       }
     ])
     .select()
@@ -57,36 +58,81 @@ export async function createPlayer(userId: string, email: string, characterName:
   if (error) throw error
   return data as Player
 }
-
-export async function getAllPlayerNames() {
+export async function getAllPlayerPositions() {
   const { data, error } = await supabase
-    .from('User')
-    .select('name')
-  
-  if (error) throw error
-  return data.map(player => player.name)
+    .from('PlayerPosition')
+    .select('id,user_id, character, position');
+    
+  if (error) throw error;
+  return data;
 }
 
-export function subscribeToPlayerChanges(callback: (players: string[]) => void) {
+export async function getAllPlayersWithPosition() {
+  const { data, error } = await supabase
+    .from('PlayerPosition')
+    .select('*, User(name)')
+  
+  if (error) {
+    console.error('Error fetching players with position:', error);
+    throw error;
+  }
+  
+  const players = data.map(item => ({
+    id: item.user_id,
+    name: item.User?.name || 'Unknown Player',
+    character_id: item.character,
+    position: item.position,
+  }))
+  
+  return players;
+}
+
+export function subscribeToPlayerChanges(callback: (players: any[]) => void) {
   return supabase
-    .channel('users_changes')
+    .channel('player_position_changes')
     .on(
       'postgres_changes',
       {
         event: '*',
         schema: 'public',
-        table: 'User'
+        table: 'PlayerPosition'
       },
       async () => {
-        // When any change occurs, fetch the latest player names
-        const { data, error } = await supabase
-          .from('User')
-          .select('name')
-        
-        if (!error && data) {
-          callback(data.map(player => player.name))
+        try {
+          const players = await getAllPlayersWithPosition();
+          callback(players);
+        } catch (error) {
+          console.error('Error in subscription callback fetching players:', error);
         }
       }
     )
     .subscribe()
+}
+
+export async function getAllPlayerNames() {
+  const { data, error } = await supabase
+    .from('User')
+    .select('name');
+  if (error) throw error;
+  return data ? data.map((user: { name: string }) => user.name) : [];
+}
+
+export async function getPlayerPosition(userId: number) {
+  const { data, error } = await supabase
+    .from('PlayerPosition')
+    .select('character, position')
+    .eq('user_id', userId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getUserIdByEmail(email: string) {
+  const { data, error } = await supabase
+    .from('User')
+    .select('id')
+    .eq('email', email)
+    .single();
+  if (error) throw error;
+  return data?.id;
 } 

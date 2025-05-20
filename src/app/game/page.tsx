@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BoardGame from '@/components/BoardGame';
-import { supabase, getAllPlayerNames, subscribeToPlayerChanges } from '@/lib/supabase';
+import { supabase, getAllPlayerPositions, subscribeToPlayerChanges, getAllPlayerNames, getAllPlayersWithPosition, getPlayerPosition, getUserIdByEmail } from '@/lib/supabase';
 
 // Custom board layout from text grid
 const BOARD_TEXT = `
@@ -29,20 +29,29 @@ const BOARD_TEXT = `
 
 // Helper to upsert player position
 async function upsertPlayerPosition(user_id: number, character: number, position: number) {
-  const { data, error } = await supabase
+  const { data: existing, error: selectError } = await supabase
     .from('PlayerPosition')
-    .upsert([
-      { user_id, character, position }
-    ], { onConflict: 'user_id' });
-  if (error) {
-    console.error('Error upserting player position:', error);
+    .select('user_id')
+    .eq('user_id', user_id)
+    .single();
+
+  if (existing) {
+    // Update
+    await supabase
+      .from('PlayerPosition')
+      .update({ character, position })
+      .eq('user_id', user_id);
+  } else {
+    // Insert
+    await supabase
+      .from('PlayerPosition')
+      .insert({ user_id, character, position });
   }
-  return data;
 }
 
 export default function GamePage() {
   const router = useRouter();
-  const [users, setUsers] = useState<string[]>([]);
+  const [players, setPlayers] = useState<any[]>([]);
   const [showSidebars, setShowSidebars] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(1);
   const [diceRoll, setDiceRoll] = useState<number | null>(null);
@@ -69,64 +78,101 @@ export default function GamePage() {
   ];
 
   useEffect(() => {
-    // Check for a session in localStorage (set on login)
+    console.log('GamePage useEffect running');
     const session = localStorage.getItem('session');
+    console.log('Session from localStorage:', session);
     if (!session) {
       router.replace('/'); // Redirect to home if not authenticated
+      return;
     }
+    async function fetchPlayerData() {
+      console.log('fetchPlayerData called');
+      try {
+        if (!session) return;
+        const sessionObj = JSON.parse(session);
+        console.log('Parsed sessionObj:', sessionObj);
+        const email = sessionObj.email;
+        if (!email) {
+          console.error('No email in session!');
+          return;
+        }
+        const userId = await getUserIdByEmail(email);
+        console.log('userId from DB:', userId);
+        if (userId) {
+          console.log('About to fetch PlayerPosition for userId:', userId, typeof userId);
+          const data = await getPlayerPosition(userId);
+          console.log('PlayerPosition data:', data);
+          setCurrentPosition(data.position);
+          const charObj = characters.find(c => c.id === data.character);
+          console.log('Resolved character:', charObj, 'from id:', data.character);
+          setSelectedCharacter(charObj ? charObj.emoji : '🐿️');
+        }
+      } catch (error) {
+        console.error('Error loading player position/character:', error);
+      }
+    }
+    fetchPlayerData();
   }, [router]);
 
   useEffect(() => {
-    console.log('Game page mounted - starting to fetch players');
-    
-    // Initial fetch of player names
-    async function fetchPlayerNames() {
-      console.log('fetchPlayerNames function called');
+    async function fetchPlayers() {
       try {
-        const playerNames = await getAllPlayerNames();
-        console.log('Successfully fetched player names:', playerNames);
-        setUsers(playerNames);
+        const { data: positions, error } = await supabase
+          .from('PlayerPosition')
+          .select('*');
+        if (error) {
+          console.error('Error fetching player positions:', error);
+          return;
+        }
+        const { data: users, error: userError } = await supabase
+          .from('User')
+          .select('id, name');
+        if (userError) {
+          console.error('Error fetching users:', userError);
+          return;
+        }
+        const players = positions.map(pos => {
+          const user = users.find(u => u.id === pos.user_id);
+          return {
+            ...pos,
+            name: user ? user.name : 'Unknown'
+          };
+        });
+        setPlayers(players);
       } catch (error) {
-        console.error('Error in fetchPlayerNames:', error);
+        console.error('Error fetching all players:', error);
       }
     }
-    fetchPlayerNames();
+    fetchPlayers();
+  }, []);
 
+  useEffect(() => {
     // Subscribe to real-time updates
-    console.log('Setting up subscription');
-    const subscription = subscribeToPlayerChanges((playerNames) => {
-      console.log('Subscription callback received new player names:', playerNames);
-      setUsers(playerNames);
+    const subscription = subscribeToPlayerChanges((playerObjs) => {
+      setPlayers(Array.isArray(playerObjs) ? playerObjs.map(p => p.name) : []);
     });
 
     // Cleanup subscription on component unmount
     return () => {
-      console.log('Cleaning up subscription');
       subscription.unsubscribe();
     };
   }, []);
 
-  // Add a debug effect to monitor users state
-  useEffect(() => {
-    console.log('Users state updated:', users);
-  }, [users]);
-
   const rollDice = () => {
     if (isRolling) return;
-    
+
     setIsRolling(true);
-    // Simulate dice rolling animation
     let rolls = 0;
     const maxRolls = 10;
     const rollInterval = setInterval(() => {
       setDiceRoll(Math.floor(Math.random() * 6) + 1);
       rolls++;
-      
+
       if (rolls >= maxRolls) {
         clearInterval(rollInterval);
         const finalRoll = Math.floor(Math.random() * 6) + 1;
         setDiceRoll(finalRoll);
-        
+
         // Create the exact path sequence from the board
         const pathSequence = [
           1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114
@@ -142,27 +188,78 @@ export default function GamePage() {
         if (newIndex < pathSequence.length) {
           const newPosition = pathSequence[newIndex];
           setCurrentPosition(newPosition);
-          
-          // Update player position in Supabase
-          const sessionStr = localStorage.getItem('session');
-          if (sessionStr) {
-            try {
-              const session = JSON.parse(sessionStr);
-              if (session?.user?.id) {
-                // Find the character id
-                const charObj = characters.find(c => c.emoji === selectedCharacter);
-                const charId = charObj ? charObj.id : 0;
-                upsertPlayerPosition(session.user.id, charId, newPosition);
+          // Async update after animation
+          (async () => {
+            const sessionStr = localStorage.getItem('session');
+            if (sessionStr) {
+              try {
+                const session = JSON.parse(sessionStr);
+                let userId = session?.user?.id || session?.id || session?.user_id;
+                if (!userId && session?.email) {
+                  // Try to fetch userId from email
+                  try {
+                    userId = await getUserIdByEmail(session.email);
+                  } catch (err) {
+                    console.error('Could not get userId by email:', err);
+                  }
+                }
+                if (userId) {
+                  const charObj = characters.find(c => c.emoji === selectedCharacter);
+                  const charId = charObj ? charObj.id : 0;
+                  console.debug('Attempting to upsert position:', { userId, charId, newPosition });
+                  try {
+                    const result = await upsertPlayerPosition(userId, charId, newPosition);
+                    console.debug('upsertPlayerPosition result:', result);
+                  } catch (err) {
+                    console.error('upsertPlayerPosition error:', err);
+                  }
+                } else {
+                  console.error('No userId found in session or database for upsert');
+                }
+              } catch (error) {
+                console.error('Error parsing session:', error);
               }
-            } catch (error) {
-              console.error('Error parsing session:', error);
+            } else {
+              console.error('No session found in localStorage for upsert');
             }
-          }
+          })();
         }
         
         setIsRolling(false);
       }
     }, 100);
+  };
+
+  const handleCharacterChange = async (newEmoji: string) => {
+    setSelectedCharacter(newEmoji);
+    const charObj = characters.find(c => c.emoji === newEmoji);
+    const charId = charObj ? charObj.id : 0;
+    const sessionStr = localStorage.getItem('session');
+    if (sessionStr) {
+      try {
+        const session = JSON.parse(sessionStr);
+        let userId = session?.user?.id || session?.id || session?.user_id;
+        if (!userId && session?.email) {
+          // Try to fetch userId from email
+          try {
+            userId = await getUserIdByEmail(session.email);
+          } catch (err) {
+            console.error('Could not get userId by email:', err);
+          }
+        }
+        if (userId) {
+          console.debug('Attempting to upsert character:', { userId, charId, currentPosition });
+          try {
+            const result = await upsertPlayerPosition(userId, charId, currentPosition);
+            console.debug('upsertPlayerPosition result:', result);
+          } catch (err) {
+            console.error('upsertPlayerPosition error:', err);
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing session:', error);
+      }
+    }
   };
 
   return (
@@ -252,9 +349,9 @@ export default function GamePage() {
       }`}>
         <h2 className="text-xl font-bold mb-4">Players</h2>
         <ul className="space-y-2">
-          {users.map((name, index) => (
-            <li key={index} className="p-2 rounded bg-blue-50 text-gray-800 font-medium truncate">
-              {name}
+          {players.map((player, idx) => (
+            <li key={`${player.user_id ?? 'unknown'}-${idx}`}>
+              {player.name}
             </li>
           ))}
         </ul>
@@ -264,6 +361,8 @@ export default function GamePage() {
       <main className="flex-1 flex items-center justify-center z-10 p-4">
         <div className="relative z-10 w-full max-w-4xl mx-auto flex justify-center">
           <BoardGame 
+            players={players}
+            characters={characters}
             playerName="Player" 
             currentPosition={currentPosition} 
             numSpaces={114} 

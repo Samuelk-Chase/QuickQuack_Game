@@ -13,6 +13,8 @@ interface BoardGameProps {
   playerName: string;
   numSpaces?: number;
   playerCharacter: string;
+  players: { user_id: number; name: string; character: number; position: number }[];
+  characters: { id: number; emoji: string; name: string }[];
 }
 
 // Define the path as a simple array of space configurations
@@ -157,7 +159,7 @@ function calculateSpiralPosition(index: number, totalSpaces: number) {
   return { x, y };
 }
 
-const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numSpaces = 50, playerCharacter }) => {
+const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numSpaces = 50, playerCharacter, players = [], characters = [] }) => {
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [currentSpace, setCurrentSpace] = useState<Space | undefined>();
 
@@ -192,13 +194,10 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
       <div className="relative" style={{ width: '700px', height: '700px' }}>
         {spaces.map((space, index) => {
           const position = calculateSpiralPosition(index, spaces.length);
-          const isPlayer = space.id === currentPosition;
           let border = 'border-transparent';
-          
-          if (isPlayer) {
+          if (space.id === currentPosition) {
             border = 'border-green-300';
           }
-
           let overlay = null;
           if (space.funEffect === 'sparkle') {
             overlay = <span className="absolute top-0 right-0 animate-pulse text-yellow-400 text-lg">✨</span>;
@@ -209,6 +208,9 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
           } else if (space.funEffect === 'duck') {
             overlay = <span className="absolute inset-0 flex items-center justify-center text-2xl">🦆</span>;
           }
+
+          // Find all players on this space
+          const playersOnThisSpace = players.filter(p => p.position === space.id);
 
           return (
             <div
@@ -224,7 +226,21 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
             >
               <img src="/Lillypad.png" alt="Lillypad" className="w-full h-full object-contain" />
               <span className="absolute top-0 left-0 text-xs font-bold">{space.id}</span>
-              {isPlayer && <span className="absolute top-0 left-0 right-0 text-center text-lg animate-bounce">{playerCharacter}</span>}
+              {/* Render all players on this space */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 pointer-events-none">
+                {playersOnThisSpace.map((player) => {
+                  const charObj = characters.find(c => c.id === player.character);
+                  return (
+                    <span key={player.user_id} className="text-2xl" title={player.name}>
+                      {charObj ? charObj.emoji : '❓'}
+                    </span>
+                  );
+                })}
+              </div>
+              {/* Render current user character as before if on this space and not already in playersOnThisSpace */}
+              {space.id === currentPosition && playersOnThisSpace.length === 0 && (
+                <span className="absolute top-0 left-0 right-0 text-center text-lg animate-bounce">{playerCharacter}</span>
+              )}
               {overlay}
             </div>
           );

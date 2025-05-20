@@ -58,7 +58,7 @@ export default function Home() {
       const newPlayer = await createPlayer(
         session.user.id,
         session.user.email || '',
-        characterName
+        1 // Replace 1 with the actual selected character ID if available
       );
       setPlayer(newPlayer);
       setShowCharacterForm(false);
@@ -111,7 +111,7 @@ export default function Home() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">QuickQuack Game</h1>
-            <p className="text-gray-600">Playing as: {player.character_name}</p>
+            <p className="text-gray-600">Playing as: {player.name}</p>
           </div>
           <button
             onClick={handleLogout}
@@ -122,7 +122,7 @@ export default function Home() {
         </div>
         <BoardGame 
           currentPosition={player.position} 
-          playerName={player.character_name} 
+          playerName={player.name} 
           playerCharacter={selectedCharacter}
         />
       </div>
