@@ -360,13 +360,12 @@ export default function GamePage() {
       {/* Main game board */}
       <main className="flex-1 flex items-center justify-center z-10 p-4">
         <div className="relative z-10 w-full max-w-4xl mx-auto flex justify-center">
-          <BoardGame 
+          <BoardGame
+            currentPosition={currentPosition}
+            playerName="Player"
+            playerCharacter={selectedCharacter}
             players={players}
             characters={characters}
-            playerName="Player" 
-            currentPosition={currentPosition} 
-            numSpaces={114} 
-            playerCharacter={selectedCharacter}
           />
         </div>
       </main>
