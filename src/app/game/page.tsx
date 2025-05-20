@@ -2,11 +2,47 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BoardGame from '@/components/BoardGame';
-import { supabase } from '@/lib/supabase';
+import { supabase, getAllPlayerNames, subscribeToPlayerChanges } from '@/lib/supabase';
+
+// Custom board layout from text grid
+const BOARD_TEXT = `
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+2 3 4 5 6 7 8 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 9 0 0 0 0 0 0 0          19 20 21      22 0 0
+0 0 0 0 0 0 10 11 12 13 14 15 16 17 18 0 0         23 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0                  24 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0                 26 25 0 0
+43 42 41 40 39 38 37 36 35 34 33 32 31 30 29 28 27 0 0 0
+44 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+45 0 0 0 0 0 0 0 0 0 0         68 69 70 71 72 0 0 0 0
+46 0 0 59 60 61 62 63 64 65 66 67 0 0 0    73 0 0 0 0
+47 0 0 58 0 0 0 0 0 0 0 0 0 0 0         74 75 0 0 0
+47 0 0 57 0 0 0 0 0 0 0 0 0 0 0 0       76 0 0 0
+49 50 0 56 0 0 0 0 0 0 0 0 0 0      78 77 0 0 0 0
+0 51 0 55 0 0 0 0 0 0 0 83 82 81 80 79 0 0 0 0
+0 52 53 54 0 0 0 0 0 86 85 84 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 87 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 88 0 0 0 0 0 0 0 0 0 0
+0 0 96 95 94 93 92 91 80 89 0 0 0 0 0 0 0 0 0 0
+0 0 97 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 0`;
+
+// Helper to upsert player position
+async function upsertPlayerPosition(user_id: number, character: number, position: number) {
+  const { data, error } = await supabase
+    .from('PlayerPosition')
+    .upsert([
+      { user_id, character, position }
+    ], { onConflict: 'user_id' });
+  if (error) {
+    console.error('Error upserting player position:', error);
+  }
+  return data;
+}
 
 export default function GamePage() {
   const router = useRouter();
-  const [users, setUsers] = useState<{ id: string; name: string | null; email: string }[]>([]);
+  const [users, setUsers] = useState<string[]>([]);
   const [showSidebars, setShowSidebars] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(1);
   const [diceRoll, setDiceRoll] = useState<number | null>(null);
@@ -15,21 +51,21 @@ export default function GamePage() {
   const [selectedCharacter, setSelectedCharacter] = useState('🐿️');
 
   const characters = [
-    { emoji: '🐿️', name: 'Squirrel' },
-    { emoji: '🦆', name: 'Duck' },
-    { emoji: '🦢', name: 'Swan' },
-    { emoji: '🐸', name: 'Frog' },
-    { emoji: '🦉', name: 'Owl' },
-    { emoji: '🦊', name: 'Fox' },
-    { emoji: '🦝', name: 'Raccoon' },
-    { emoji: '🦡', name: 'Badger' },
-    { emoji: '🦫', name: 'Beaver' },
-    { emoji: '🦦', name: 'Otter' },
-    { emoji: '🦥', name: 'Sloth' },
-    { emoji: '🦨', name: 'Skunk' },
-    { emoji: '🦘', name: 'Kangaroo' },
-    { emoji: '🦙', name: 'Llama' },
-    { emoji: '🦒', name: 'Giraffe' }
+    { id: 0, emoji: '🐿️', name: 'Squirrel' },
+    { id: 1, emoji: '🦆', name: 'Duck' },
+    { id: 2, emoji: '🦢', name: 'Swan' },
+    { id: 3, emoji: '🐸', name: 'Frog' },
+    { id: 4, emoji: '🦉', name: 'Owl' },
+    { id: 5, emoji: '🦊', name: 'Fox' },
+    { id: 6, emoji: '🦝', name: 'Raccoon' },
+    { id: 7, emoji: '🦡', name: 'Badger' },
+    { id: 8, emoji: '🦫', name: 'Beaver' },
+    { id: 9, emoji: '🦦', name: 'Otter' },
+    { id: 10, emoji: '🦥', name: 'Sloth' },
+    { id: 11, emoji: '🦨', name: 'Skunk' },
+    { id: 12, emoji: '🦘', name: 'Kangaroo' },
+    { id: 13, emoji: '🦙', name: 'Llama' },
+    { id: 14, emoji: '🦒', name: 'Giraffe' }
   ];
 
   useEffect(() => {
@@ -41,17 +77,39 @@ export default function GamePage() {
   }, [router]);
 
   useEffect(() => {
-    // Fetch all users from Supabase
-    async function fetchUsers() {
-      const { data, error } = await supabase.from('User').select('id, name, email');
-      console.log('DEBUG: fetched users:', data);
-      if (error) console.error('DEBUG: Supabase error:', error);
-      if (!error && data) {
-        setUsers(data);
+    console.log('Game page mounted - starting to fetch players');
+    
+    // Initial fetch of player names
+    async function fetchPlayerNames() {
+      console.log('fetchPlayerNames function called');
+      try {
+        const playerNames = await getAllPlayerNames();
+        console.log('Successfully fetched player names:', playerNames);
+        setUsers(playerNames);
+      } catch (error) {
+        console.error('Error in fetchPlayerNames:', error);
       }
     }
-    fetchUsers();
+    fetchPlayerNames();
+
+    // Subscribe to real-time updates
+    console.log('Setting up subscription');
+    const subscription = subscribeToPlayerChanges((playerNames) => {
+      console.log('Subscription callback received new player names:', playerNames);
+      setUsers(playerNames);
+    });
+
+    // Cleanup subscription on component unmount
+    return () => {
+      console.log('Cleaning up subscription');
+      subscription.unsubscribe();
+    };
   }, []);
+
+  // Add a debug effect to monitor users state
+  useEffect(() => {
+    console.log('Users state updated:', users);
+  }, [users]);
 
   const rollDice = () => {
     if (isRolling) return;
@@ -68,8 +126,40 @@ export default function GamePage() {
         clearInterval(rollInterval);
         const finalRoll = Math.floor(Math.random() * 6) + 1;
         setDiceRoll(finalRoll);
-        // Update position based on the dice roll, ensuring we don't exceed the maximum space (114)
-        setCurrentPosition(prev => Math.min(prev + finalRoll, 114));
+        
+        // Create the exact path sequence from the board
+        const pathSequence = [
+          1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114
+        ];
+
+        // Find the current position's index in the path
+        const currentIndex = pathSequence.indexOf(currentPosition);
+        
+        // Calculate the new position index
+        const newIndex = currentIndex + finalRoll;
+        
+        // Only update if we haven't reached the end
+        if (newIndex < pathSequence.length) {
+          const newPosition = pathSequence[newIndex];
+          setCurrentPosition(newPosition);
+          
+          // Update player position in Supabase
+          const sessionStr = localStorage.getItem('session');
+          if (sessionStr) {
+            try {
+              const session = JSON.parse(sessionStr);
+              if (session?.user?.id) {
+                // Find the character id
+                const charObj = characters.find(c => c.emoji === selectedCharacter);
+                const charId = charObj ? charObj.id : 0;
+                upsertPlayerPosition(session.user.id, charId, newPosition);
+              }
+            } catch (error) {
+              console.error('Error parsing session:', error);
+            }
+          }
+        }
+        
         setIsRolling(false);
       }
     }, 100);
@@ -162,9 +252,9 @@ export default function GamePage() {
       }`}>
         <h2 className="text-xl font-bold mb-4">Players</h2>
         <ul className="space-y-2">
-          {users.map((user) => (
-            <li key={user.id} className="p-2 rounded bg-blue-50 text-gray-800 font-medium truncate">
-              {user.name || user.email}
+          {users.map((name, index) => (
+            <li key={index} className="p-2 rounded bg-blue-50 text-gray-800 font-medium truncate">
+              {name}
             </li>
           ))}
         </ul>
