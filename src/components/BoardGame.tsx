@@ -18,26 +18,26 @@ interface BoardGameProps {
 
 // Custom board layout from text grid
 const BOARD_TEXT = `
-1000000000000000000
-1111111000000000000
-0000001000000011110
-0000001111111110010
-0000000000000000010
-1111000000000000110
-1001111111111111100
-1000000000000000000
-1000000000011111000
-1001111111110001000
-1001000000000001100
-1001000000000000100
-110100000000001100
-0101000000011111000
-0111000001110000000
-0000000001000000000
-0000000001000000000
-0011111111000000000
-0010000000000000000
-0011111111111111111`;
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+2 3 4 5 6 7 8 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 9 0 0 0 0 0 0 0 19 20 21 22 0 0
+0 0 0 0 0 0 10 11 12 13 14 15 16 17 18 0 0 23 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 24 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 26 25 0 0
+43 42 41 40 39 38 37 36 35 34 33 32 31 30 29 28 27 0 0 0
+44 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+45 0 0 0 0 0 0 0 0 0 0 68 69 70 71 72 0 0 0 0
+46 0 0 59 60 61 62 63 64 65 66 67 0 0 0 73 0 0 0 0
+47 0 0 58 0 0 0 0 0 0 0 0 0 0 0 74 75 0 0 0
+47 0 0 57 0 0 0 0 0 0 0 0 0 0 0 0 76 0 0 0
+49 50 0 56 0 0 0 0 0 0 0 0 0 0 78 77 0 0 0 0
+0 51 0 55 0 0 0 0 0 0 0 83 82 81 80 79 0 0 0 0
+0 52 53 54 0 0 0 0 0 86 85 84 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 87 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 88 0 0 0 0 0 0 0 0 0 0
+0 0 96 95 94 93 92 91 80 89 0 0 0 0 0 0 0 0 0 0
+0 0 97 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 0`;
 
 function parseBoardText(boardText: string): { x: number; y: number }[] {
   const lines = boardText.trim().split('\n');
@@ -45,8 +45,9 @@ function parseBoardText(boardText: string): { x: number; y: number }[] {
   
   // First pass: collect all coordinates in order of appearance
   for (let y = 0; y < lines.length; y++) {
-    for (let x = 0; x < lines[y].length; x++) {
-      if (lines[y][x] === '1') {
+    const numbers = lines[y].trim().split(/\s+/);
+    for (let x = 0; x < numbers.length; x++) {
+      if (numbers[x] !== '0') {
         coords.push({ x, y });
       }
     }
@@ -138,8 +139,8 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
 
   return (
     <div
-      className="overflow-visible max-h-[80vh] p-2 bg-transparent -ml-16 pl-16"
-      style={{ width: `${GRID_SIZE * 3}rem`, height: `${GRID_SIZE * 3}rem` }}
+      className="overflow-visible p-2 bg-transparent flex flex-col items-center mx-auto ml-32"
+      style={{ width: `${GRID_SIZE * 3}rem`, maxWidth: '100%' }}
     >
       <div className="mb-4 text-center">
         <h2 className="text-2xl font-bold flex items-center justify-center gap-2">
@@ -154,6 +155,8 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
           gridTemplateColumns: `repeat(${GRID_SIZE}, 2rem)`,
           width: `${GRID_SIZE * 2}rem`,
           height: `${GRID_SIZE * 2}rem`,
+          padding: 0,
+          marginBottom: 0
         }}
       >
         {Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, idx) => {
@@ -209,7 +212,7 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
           }
         })}
       </div>
-      <div className="mt-6 text-center text-lg font-bold text-yellow-700">
+      <div className="text-center text-lg font-bold text-yellow-700">
         🏁 Finish Line at Space {spaces.length}! Good luck, duck!
       </div>
     </div>

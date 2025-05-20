@@ -68,7 +68,8 @@ export default function GamePage() {
         clearInterval(rollInterval);
         const finalRoll = Math.floor(Math.random() * 6) + 1;
         setDiceRoll(finalRoll);
-        setCurrentPosition(prev => Math.min(prev + finalRoll, 100));
+        // Update position based on the dice roll, ensuring we don't exceed the maximum space (114)
+        setCurrentPosition(prev => Math.min(prev + finalRoll, 114));
         setIsRolling(false);
       }
     }, 100);
@@ -171,11 +172,11 @@ export default function GamePage() {
 
       {/* Main game board */}
       <main className="flex-1 flex items-center justify-center z-10 p-4">
-        <div className="relative z-10 w-full max-w-2xl">
+        <div className="relative z-10 w-full max-w-4xl mx-auto flex justify-center">
           <BoardGame 
             playerName="Player" 
             currentPosition={currentPosition} 
-            numSpaces={100} 
+            numSpaces={114} 
             playerCharacter={selectedCharacter}
           />
         </div>
