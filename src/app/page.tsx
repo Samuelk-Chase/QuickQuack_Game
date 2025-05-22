@@ -11,6 +11,7 @@ export default function Home() {
   const [characterName, setCharacterName] = useState('');
   const [showCharacterForm, setShowCharacterForm] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState('🐿️');
+  const [showCharacterModal, setShowCharacterModal] = useState(false);
 
   // Add the characters array here
   const characters = [
@@ -82,16 +83,41 @@ export default function Home() {
     if (!session?.user || !characterName) return;
 
     try {
+      const charObj = characters.find(c => c.emoji === selectedCharacter);
+      const charId = charObj ? charObj.id : 0;
       const newPlayer = await createPlayer(
         session.user.id,
         session.user.email || '',
-        1 // Replace 1 with the actual selected character ID if available
+        charId
       );
       setPlayer(newPlayer);
       setShowCharacterForm(false);
     } catch (error) {
       console.error('Error creating player:', error);
     }
+  };
+
+  const handleCharacterChange = async (newEmoji: string) => {
+    setSelectedCharacter(newEmoji);
+    const charObj = characters.find(c => c.emoji === newEmoji);
+    const charId = charObj ? charObj.id : 0;
+    
+    if (session?.user) {
+      try {
+        const { data, error } = await supabase
+          .from('User')
+          .update({ character_id: charId })
+          .eq('id', session.user.id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        if (data) setPlayer(data);
+      } catch (error) {
+        console.error('Error updating character:', error);
+      }
+    }
+    setShowCharacterModal(false);
   };
 
   if (!session) {
@@ -115,6 +141,28 @@ export default function Home() {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Your Character
+              </label>
+              <div className="grid grid-cols-5 gap-2">
+                {characters.map((char) => (
+                  <button
+                    key={char.id}
+                    type="button"
+                    onClick={() => setSelectedCharacter(char.emoji)}
+                    className={`p-2 rounded-lg text-2xl transition-all ${
+                      selectedCharacter === char.emoji
+                        ? 'bg-blue-500 text-white scale-110'
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                    title={char.name}
+                  >
+                    {char.emoji}
+                  </button>
+                ))}
+              </div>
             </div>
             <button
               type="submit"
@@ -140,12 +188,21 @@ export default function Home() {
             <h1 className="text-3xl font-bold">QuickQuack Game</h1>
             <p className="text-gray-600">Playing as: {player.name}</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-          >
-            Logout
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => setShowCharacterModal(true)}
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center gap-2"
+            >
+              <span className="text-2xl">{selectedCharacter}</span>
+              <span>Change Character</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+            >
+              Logout
+            </button>
+          </div>
         </div>
         <BoardGame 
           currentPosition={player.position} 
@@ -154,6 +211,37 @@ export default function Home() {
           players={players}
           characters={characters}
         />
+
+        {/* Character Selection Modal */}
+        {showCharacterModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+              <h2 className="text-2xl font-bold mb-4">Choose Your Character</h2>
+              <div className="grid grid-cols-5 gap-2">
+                {characters.map((char) => (
+                  <button
+                    key={char.id}
+                    onClick={() => handleCharacterChange(char.emoji)}
+                    className={`p-2 rounded-lg text-2xl transition-all ${
+                      selectedCharacter === char.emoji
+                        ? 'bg-blue-500 text-white scale-110'
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                    title={char.name}
+                  >
+                    {char.emoji}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowCharacterModal(false)}
+                className="mt-4 w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
