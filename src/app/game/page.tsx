@@ -376,9 +376,11 @@ export default function GamePage() {
       }`}>
         <h2 className="text-xl font-bold mb-4">Key</h2>
         <div className="flex flex-col gap-4 text-lg">
-          <div className="flex items-center gap-2"><span className="text-2xl">🦆</span> <span>= Medium Prize</span></div>
-          <div className="flex items-center gap-2"><span className="text-2xl">🦋</span> <span>= Small Prize</span></div>
-          <div className="flex items-center gap-2"><span className="text-2xl">✨</span> <span>= Large Prize</span></div>
+          <div className="flex items-center gap-2"><span className="text-2xl">🎁</span> <span>= Small Prize</span></div>
+          <div className="flex items-center gap-2"><span className="text-2xl">🎯</span> <span>= Medium Prize</span></div>
+          <div className="flex items-center gap-2"><span className="text-2xl">🏆</span> <span>= Large Prize</span></div>
+          <div className="flex items-center gap-2"><span className="text-2xl">🎲</span> <span>= Random Prize</span></div>
+          <div className="flex items-center gap-2"><span className="text-2xl">🌟</span> <span>= Awardco Grand Prize</span></div>
         </div>
       </aside>
 

@@ -29,97 +29,97 @@ const SPACE_CONFIGS = [
   { id: 7, type: 'normal' as const },
   { id: 8, type: 'normal' as const },
   { id: 9, type: 'normal' as const },
-  { id: 10, type: 'prize' as const, description: '🦆 First Golden Duck!', funEffect: 'sparkle' },
+  { id: 10, type: 'prize' as const, description: 'Small Prize!', funEffect: 'sparkle' },
   { id: 11, type: 'normal' as const },
   { id: 12, type: 'normal' as const },
   { id: 13, type: 'normal' as const },
-  { id: 14, type: 'special' as const, description: '🦢 Swan Surprise!', funEffect: 'butterfly' },
+  { id: 14, type: 'prize' as const, description: 'Medium Prize!', funEffect: 'sparkle' },
   { id: 15, type: 'normal' as const },
   { id: 16, type: 'normal' as const },
   { id: 17, type: 'normal' as const },
   { id: 18, type: 'normal' as const },
   { id: 19, type: 'normal' as const },
-  { id: 20, type: 'prize' as const, description: '🦆 Second Golden Duck!', funEffect: 'sparkle' },
+  { id: 20, type: 'prize' as const, description: 'Medium Prize!', funEffect: 'sparkle' },
   { id: 21, type: 'normal' as const },
   { id: 22, type: 'normal' as const },
   { id: 23, type: 'normal' as const },
   { id: 24, type: 'normal' as const },
-  { id: 25, type: 'special' as const, description: '🌊 Water Ripple!', funEffect: 'ripple' },
+  { id: 25, type: 'normal' as const },
   { id: 26, type: 'normal' as const },
   { id: 27, type: 'normal' as const },
   { id: 28, type: 'normal' as const },
   { id: 29, type: 'normal' as const },
-  { id: 30, type: 'prize' as const, description: '🦆 Third Golden Duck!', funEffect: 'sparkle' },
+  { id: 30, type: 'prize' as const, description: 'Small Prize!', funEffect: 'sparkle' },
   { id: 31, type: 'normal' as const },
   { id: 32, type: 'normal' as const },
   { id: 33, type: 'normal' as const },
   { id: 34, type: 'normal' as const },
-  { id: 35, type: 'special' as const, description: '🦋 Butterfly Garden!', funEffect: 'butterfly' },
-  { id: 36, type: 'normal' as const },
+  { id: 35, type: 'normal' as const },
+  { id: 36, type: 'prize' as const, description: 'Small Prize!', funEffect: 'sparkle' },
   { id: 37, type: 'normal' as const },
   { id: 38, type: 'normal' as const },
   { id: 39, type: 'normal' as const },
-  { id: 40, type: 'prize' as const, description: '🦆 Fourth Golden Duck!', funEffect: 'sparkle' },
+  { id: 40, type: 'prize' as const, description: 'Large Prize!', funEffect: 'sparkle' },
   { id: 41, type: 'normal' as const },
   { id: 42, type: 'normal' as const },
   { id: 43, type: 'normal' as const },
   { id: 44, type: 'normal' as const },
-  { id: 45, type: 'special' as const, description: '🦆 Duck Parade!', funEffect: 'duck' },
+  { id: 45, type: 'prize' as const, description: 'Medium Prize!', funEffect: 'sparkle' },
   { id: 46, type: 'normal' as const },
   { id: 47, type: 'normal' as const },
   { id: 48, type: 'normal' as const },
   { id: 49, type: 'normal' as const },
-  { id: 50, type: 'prize' as const, description: '🦆 Fifth Golden Duck!', funEffect: 'sparkle' },
+  { id: 50, type: 'prize' as const, description: 'Random Prize!', funEffect: 'sparkle' },
   { id: 51, type: 'normal' as const },
   { id: 52, type: 'normal' as const },
   { id: 53, type: 'normal' as const },
   { id: 54, type: 'normal' as const },
-  { id: 55, type: 'special' as const, description: '🌊 Big Splash!', funEffect: 'ripple' },
+  { id: 55, type: 'normal' as const },
   { id: 56, type: 'normal' as const },
   { id: 57, type: 'normal' as const },
   { id: 58, type: 'normal' as const },
   { id: 59, type: 'normal' as const },
-  { id: 60, type: 'prize' as const, description: '🦆 Sixth Golden Duck!', funEffect: 'sparkle' },
+  { id: 60, type: 'prize' as const, description: 'Small Prize!', funEffect: 'sparkle' },
   { id: 61, type: 'normal' as const },
   { id: 62, type: 'normal' as const },
   { id: 63, type: 'normal' as const },
   { id: 64, type: 'normal' as const },
-  { id: 65, type: 'special' as const, description: '🦋 Butterfly Dance!', funEffect: 'butterfly' },
+  { id: 65, type: 'prize' as const, description: 'Large Prize!', funEffect: 'sparkle' },
   { id: 66, type: 'normal' as const },
   { id: 67, type: 'normal' as const },
   { id: 68, type: 'normal' as const },
   { id: 69, type: 'normal' as const },
-  { id: 70, type: 'prize' as const, description: '🦆 Seventh Golden Duck!', funEffect: 'sparkle' },
+  { id: 70, type: 'prize' as const, description: 'Medium Prize!', funEffect: 'sparkle' },
   { id: 71, type: 'normal' as const },
   { id: 72, type: 'normal' as const },
   { id: 73, type: 'normal' as const },
   { id: 74, type: 'normal' as const },
-  { id: 75, type: 'special' as const, description: '🦆 Duck Family!', funEffect: 'duck' },
+  { id: 75, type: 'normal' as const},
   { id: 76, type: 'normal' as const },
   { id: 77, type: 'normal' as const },
   { id: 78, type: 'normal' as const },
   { id: 79, type: 'normal' as const },
-  { id: 80, type: 'prize' as const, description: '🦆 Eighth Golden Duck!', funEffect: 'sparkle' },
+  { id: 80, type: 'prize' as const, description: 'Large Prize!', funEffect: 'sparkle' },
   { id: 81, type: 'normal' as const },
   { id: 82, type: 'normal' as const },
   { id: 83, type: 'normal' as const },
   { id: 84, type: 'normal' as const },
-  { id: 85, type: 'special' as const, description: '🌊 Waterfall!', funEffect: 'ripple' },
+  { id: 85, type: 'prize' as const, description: 'Random Prize!', funEffect: 'sparkle' },
   { id: 86, type: 'normal' as const },
   { id: 87, type: 'normal' as const },
   { id: 88, type: 'normal' as const },
   { id: 89, type: 'normal' as const },
-  { id: 90, type: 'prize' as const, description: '🦆 Ninth Golden Duck!', funEffect: 'sparkle' },
+  { id: 90, type: 'prize' as const, description: 'Small Prize!', funEffect: 'sparkle' },
   { id: 91, type: 'normal' as const },
   { id: 92, type: 'normal' as const },
   { id: 93, type: 'normal' as const },
   { id: 94, type: 'normal' as const },
-  { id: 95, type: 'special' as const, description: '🦋 Final Butterfly!', funEffect: 'butterfly' },
+  { id: 95, type: 'normal' as const },
   { id: 96, type: 'normal' as const },
   { id: 97, type: 'normal' as const },
   { id: 98, type: 'normal' as const },
   { id: 99, type: 'normal' as const },
-  { id: 100, type: 'prize' as const, description: '🏆 Final Golden Duck!', funEffect: 'sparkle' }
+  { id: 100, type: 'prize' as const, description: 'Awardco Grand Prize!', funEffect: 'sparkle' }
 ];
 
 // Create a linked list of spaces
@@ -163,6 +163,16 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [currentSpace, setCurrentSpace] = useState<Space | undefined>();
 
+  // Function to get prize emoji based on description
+  const getPrizeEmoji = (description: string) => {
+    if (description.includes('Small Prize')) return '🎁';
+    if (description.includes('Medium Prize')) return '🎯';
+    if (description.includes('Large Prize')) return '🏆';
+    if (description.includes('Random Prize')) return '🎲';
+    if (description.includes('Awardco Grand Prize')) return '🌟';
+    return '🎁';
+  };
+
   useEffect(() => {
     const spaceList = createSpaceList(SPACE_CONFIGS);
     setSpaces(spaceList);
@@ -199,8 +209,13 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
             border = 'border-green-300';
           }
           let overlay = null;
-          if (space.funEffect === 'sparkle') {
-            overlay = <span className="absolute top-0 right-0 animate-pulse text-yellow-400 text-lg">✨</span>;
+          if (space.type === 'prize') {
+            const prizeEmoji = getPrizeEmoji(space.description);
+            overlay = (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-2xl animate-pulse">{prizeEmoji}</span>
+              </div>
+            );
           } else if (space.funEffect === 'butterfly') {
             overlay = <span className="absolute bottom-0 left-0 animate-bounce text-pink-400 text-lg">🦋</span>;
           } else if (space.funEffect === 'ripple') {
