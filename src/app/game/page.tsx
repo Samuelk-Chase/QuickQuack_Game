@@ -4,6 +4,21 @@ import { useRouter } from 'next/navigation';
 import BoardGame from '@/components/BoardGame';
 import { supabase, getAllPlayerPositions, subscribeToPlayerChanges, getAllPlayerNames, getAllPlayersWithPosition, getPlayerPosition, getUserIdByEmail } from '@/lib/supabase';
 
+interface RollType {
+  name: string;
+  rolls: number;
+}
+
+const ROLL_TYPES: RollType[] = [
+  { name: 'Ceramic Membership', rolls: 3 },
+  { name: 'Lucky Duck Membership', rolls: 2 },
+  { name: 'Good Membership', rolls: 1 },
+  { name: 'Flock Sale', rolls: 2 },
+  { name: 'Single Ceramic', rolls: 1 },
+  { name: 'Google Review', rolls: 1 },
+  { name: 'Dashwipe Review', rolls: 1 }
+];
+
 // Custom board layout from text grid
 const BOARD_TEXT = `
 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -56,8 +71,9 @@ export default function GamePage() {
   const [currentPosition, setCurrentPosition] = useState(1);
   const [diceRoll, setDiceRoll] = useState<number | null>(null);
   const [isRolling, setIsRolling] = useState(false);
-  const [showCharacterModal, setShowCharacterModal] = useState(false);
-  const [selectedCharacter, setSelectedCharacter] = useState('🐿️');
+  const [showRollOptions, setShowRollOptions] = useState(false);
+  const [selectedRollType, setSelectedRollType] = useState<RollType | null>(null);
+  const [remainingRolls, setRemainingRolls] = useState(0);
 
   const characters = [
     { id: 0, emoji: '🐿️', name: 'Squirrel' },
@@ -103,12 +119,9 @@ export default function GamePage() {
           const data = await getPlayerPosition(userId);
           console.log('PlayerPosition data:', data);
           setCurrentPosition(data.position);
-          const charObj = characters.find(c => c.id === data.character);
-          console.log('Resolved character:', charObj, 'from id:', data.character);
-          setSelectedCharacter(charObj ? charObj.emoji : '🐿️');
         }
       } catch (error) {
-        console.error('Error loading player position/character:', error);
+        console.error('Error loading player position:', error);
       }
     }
     fetchPlayerData();
@@ -160,6 +173,11 @@ export default function GamePage() {
 
   const rollDice = () => {
     if (isRolling) return;
+    
+    if (!selectedRollType) {
+      setShowRollOptions(true);
+      return;
+    }
 
     setIsRolling(true);
     let rolls = 0;
@@ -196,7 +214,6 @@ export default function GamePage() {
                 const session = JSON.parse(sessionStr);
                 let userId = session?.user?.id || session?.id || session?.user_id;
                 if (!userId && session?.email) {
-                  // Try to fetch userId from email
                   try {
                     userId = await getUserIdByEmail(session.email);
                   } catch (err) {
@@ -204,8 +221,8 @@ export default function GamePage() {
                   }
                 }
                 if (userId) {
-                  const charObj = characters.find(c => c.emoji === selectedCharacter);
-                  const charId = charObj ? charObj.id : 0;
+                  const charObj = characters.find(c => c.id === 1); // Always use Duck character
+                  const charId = charObj ? charObj.id : 1;
                   console.debug('Attempting to upsert position:', { userId, charId, newPosition });
                   try {
                     const result = await upsertPlayerPosition(userId, charId, newPosition);
@@ -226,40 +243,20 @@ export default function GamePage() {
         }
         
         setIsRolling(false);
+        setRemainingRolls(prev => prev - 1);
+        
+        // If no more rolls left, reset the selected roll type
+        if (remainingRolls <= 1) {
+          setSelectedRollType(null);
+        }
       }
     }, 100);
   };
 
-  const handleCharacterChange = async (newEmoji: string) => {
-    setSelectedCharacter(newEmoji);
-    const charObj = characters.find(c => c.emoji === newEmoji);
-    const charId = charObj ? charObj.id : 0;
-    const sessionStr = localStorage.getItem('session');
-    if (sessionStr) {
-      try {
-        const session = JSON.parse(sessionStr);
-        let userId = session?.user?.id || session?.id || session?.user_id;
-        if (!userId && session?.email) {
-          // Try to fetch userId from email
-          try {
-            userId = await getUserIdByEmail(session.email);
-          } catch (err) {
-            console.error('Could not get userId by email:', err);
-          }
-        }
-        if (userId) {
-          console.debug('Attempting to upsert character:', { userId, charId, currentPosition });
-          try {
-            const result = await upsertPlayerPosition(userId, charId, currentPosition);
-            console.debug('upsertPlayerPosition result:', result);
-          } catch (err) {
-            console.error('upsertPlayerPosition error:', err);
-          }
-        }
-      } catch (error) {
-        console.error('Error parsing session:', error);
-      }
-    }
+  const handleRollTypeSelect = (rollType: RollType) => {
+    setSelectedRollType(rollType);
+    setRemainingRolls(rollType.rolls);
+    setShowRollOptions(false);
   };
 
   return (
@@ -301,41 +298,32 @@ export default function GamePage() {
             {diceRoll}
           </div>
         )}
+        {selectedRollType && (
+          <div className="bg-white/90 p-2 rounded-lg shadow-lg text-sm">
+            {selectedRollType.name}: {remainingRolls} rolls left
+          </div>
+        )}
       </div>
 
-      {/* Player Character Indicator */}
-      <div 
-        className="fixed top-20 right-4 z-50 bg-white/90 p-3 rounded-lg shadow-lg cursor-pointer hover:bg-white transition-colors"
-        onClick={() => setShowCharacterModal(true)}
-      >
-        <div className="text-4xl">{selectedCharacter}</div>
-        <div className="text-sm font-medium text-center mt-1">Click to Change</div>
-      </div>
-
-      {/* Character Selection Modal */}
-      {showCharacterModal && (
+      {/* Roll Options Modal */}
+      {showRollOptions && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold mb-4 text-center">Choose Your Character</h2>
-            <div className="grid grid-cols-3 gap-4">
-              {characters.map((char) => (
+            <h2 className="text-2xl font-bold mb-4 text-center">Choose Your Roll Type</h2>
+            <div className="grid grid-cols-1 gap-2">
+              {ROLL_TYPES.map((rollType) => (
                 <button
-                  key={char.emoji}
-                  onClick={() => {
-                    setSelectedCharacter(char.emoji);
-                    setShowCharacterModal(false);
-                  }}
-                  className={`p-4 rounded-lg text-4xl hover:bg-gray-100 transition-colors ${
-                    selectedCharacter === char.emoji ? 'bg-blue-100' : ''
-                  }`}
+                  key={rollType.name}
+                  onClick={() => handleRollTypeSelect(rollType)}
+                  className="p-3 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium transition-colors"
                 >
-                  {char.emoji}
+                  {rollType.name} ({rollType.rolls} rolls)
                 </button>
               ))}
             </div>
             <button
-              onClick={() => setShowCharacterModal(false)}
-              className="mt-6 w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors"
+              onClick={() => setShowRollOptions(false)}
+              className="mt-4 w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors"
             >
               Cancel
             </button>
@@ -347,14 +335,22 @@ export default function GamePage() {
       <aside className={`fixed lg:static w-64 bg-white/80 p-4 border-r border-gray-200 flex flex-col gap-2 z-20 transition-transform duration-300 ease-in-out ${
         showSidebars ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-        <h2 className="text-xl font-bold mb-4">Players</h2>
-        <ul className="space-y-2">
-          {players.map((player, idx) => (
-            <li key={`${player.user_id ?? 'unknown'}-${idx}`}>
-              {player.name}
-            </li>
-          ))}
-        </ul>
+        <h2 className="text-xl font-bold mb-4">Leaderboard</h2>
+        <div className="space-y-2">
+          {[...players]
+            .sort((a, b) => b.position - a.position)
+            .map((player, index) => {
+              const charObj = characters.find(c => c.id === player.character);
+              return (
+                <div key={player.user_id} className="flex items-center gap-2 p-2 rounded hover:bg-white/5">
+                  <span className="font-bold">{index + 1}.</span>
+                  <span className="text-xl">{charObj ? charObj.emoji : '❓'}</span>
+                  <span className="truncate">{player.name}</span>
+                  <span className="ml-auto text-sm">{player.position}</span>
+                </div>
+              );
+            })}
+        </div>
       </aside>
 
       {/* Main game board */}
@@ -363,7 +359,7 @@ export default function GamePage() {
           <BoardGame
             currentPosition={currentPosition}
             playerName="Player"
-            playerCharacter={selectedCharacter}
+            playerCharacter="🦆"
             players={players}
             characters={characters}
           />

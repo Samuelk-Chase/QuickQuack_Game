@@ -197,9 +197,13 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
         <h2 className="text-2xl font-bold flex items-center justify-center gap-2">
           <span>🦆</span> Duck Adventure Map <span>🦆</span>
         </h2>
-        <p className="text-lg mt-2">Player: <span className="font-bold">{playerName}</span></p>
-        <p className="text-md">Current Position: <span className="font-bold">{currentPosition}</span></p>
       </div>
+      <div>
+           .
+        </div>
+        <div>
+           .
+        </div>
       
       <div className="relative" style={{ width: '700px', height: '700px' }}>
         {spaces.map((space, index) => {
@@ -260,10 +264,6 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
             </div>
           );
         })}
-      </div>
-      
-      <div className="text-center text-lg font-bold text-yellow-700 mt-4">
-        🏁 Finish Line at Space 100! Good luck, duck!
       </div>
     </div>
   );
