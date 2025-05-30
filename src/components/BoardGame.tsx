@@ -207,7 +207,7 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
     <div className="overflow-visible p-2 bg-transparent flex flex-col items-center mx-auto">
       <div className="mb-4 text-center">
         <h2 className="text-2xl font-bold flex items-center justify-center gap-2 text-black">
-          <span>🦆</span> Duck Adventure Map <span>🦆</span>
+          <span>🦆</span> Adventure Duck Map <span>🦆</span>
         </h2>
       </div>
       <div>
