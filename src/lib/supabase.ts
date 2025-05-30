@@ -30,9 +30,12 @@ export async function getPlayer(userId: string) {
 }
 
 export async function updatePlayerPosition(userId: string, newPosition: number) {
+  // Ensure position doesn't exceed 100
+  const safePosition = Math.min(newPosition, 100);
+  
   const { data, error } = await supabase
     .from('User')
-    .update({ position: newPosition })
+    .update({ position: safePosition })
     .eq('id', userId)
     .select()
     .single()
