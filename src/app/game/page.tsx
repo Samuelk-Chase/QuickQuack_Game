@@ -354,12 +354,12 @@ export default function GamePage() {
           <span className="text-2xl">🎲</span>
         </button>
         {diceRoll && (
-          <div className="bg-white/90 p-3 rounded-lg shadow-lg text-3xl font-bold">
+          <div className="bg-white/90 p-3 rounded-lg shadow-lg text-3xl font-bold text-black">
             {diceRoll}
           </div>
         )}
         {selectedRollType && (
-          <div className="bg-white/90 p-2 rounded-lg shadow-lg text-sm">
+          <div className="bg-white/90 p-2 rounded-lg shadow-lg text-sm text-black">
             {selectedRollType.name}: {remainingRolls} rolls left
           </div>
         )}
@@ -369,13 +369,13 @@ export default function GamePage() {
       {showRollOptions && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold mb-4 text-center">Choose Your Roll Type</h2>
+            <h2 className="text-2xl font-bold mb-4 text-center text-black">Choose Your Roll Type</h2>
             <div className="grid grid-cols-1 gap-2">
               {ROLL_TYPES.map((rollType) => (
                 <button
                   key={rollType.name}
                   onClick={() => handleRollTypeSelect(rollType)}
-                  className="p-3 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium transition-colors"
+                  className="p-3 rounded-lg bg-blue-100 hover:bg-blue-200 text-black font-medium transition-colors"
                 >
                   {rollType.name} ({rollType.rolls} rolls)
                 </button>
@@ -383,7 +383,7 @@ export default function GamePage() {
             </div>
             <button
               onClick={() => setShowRollOptions(false)}
-              className="mt-4 w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors"
+              className="mt-4 w-full bg-gray-200 hover:bg-gray-300 text-black font-medium py-2 px-4 rounded-lg transition-colors"
             >
               Cancel
             </button>
@@ -395,7 +395,7 @@ export default function GamePage() {
       <aside className={`fixed lg:static w-64 bg-white/80 p-4 border-r border-gray-200 flex flex-col gap-2 z-20 transition-transform duration-300 ease-in-out ${
         showSidebars ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-        <h2 className="text-xl font-bold mb-4">Leaderboard</h2>
+        <h2 className="text-xl font-bold mb-4 text-black">Leaderboard</h2>
         <div className="space-y-2">
           {[...players]
             .sort((a, b) => b.position - a.position)
@@ -403,10 +403,10 @@ export default function GamePage() {
               const charObj = characters.find(c => c.id === player.character);
               return (
                 <div key={player.user_id} className="flex items-center gap-2 p-2 rounded hover:bg-white/5">
-                  <span className="font-bold">{index + 1}.</span>
+                  <span className="font-bold text-black">{index + 1}.</span>
                   <span className="text-xl">{charObj ? charObj.emoji : '❓'}</span>
-                  <span className="truncate">{player.name}</span>
-                  <span className="ml-auto text-sm">{player.position}</span>
+                  <span className="truncate text-black">{player.name}</span>
+                  <span className="ml-auto text-sm text-black">{player.position}</span>
                 </div>
               );
             })}
@@ -430,12 +430,12 @@ export default function GamePage() {
       <aside className={`fixed lg:static w-64 bg-white/80 p-4 border-l border-gray-200 flex flex-col justify-center gap-4 z-20 transition-transform duration-300 ease-in-out ${
         showSidebars ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
       }`}>
-        <h2 className="text-xl font-bold mb-4">Key</h2>
+        <h2 className="text-xl font-bold mb-4 text-black">Key</h2>
         <div className="flex flex-col gap-4 text-lg">
-          <div className="flex items-center gap-2"><span className="text-2xl">🎁</span> <span>= Small Prize</span></div>
-          <div className="flex items-center gap-2"><span className="text-2xl">🎯</span> <span>= Medium Prize</span></div>
-          <div className="flex items-center gap-2"><span className="text-2xl">🏆</span> <span>= Large Prize</span></div>
-          <div className="flex items-center gap-2"><span className="text-2xl">🌟</span> <span>= Awardco Grand Prize</span></div>
+          <div className="flex items-center gap-2"><span className="text-2xl">🎁</span> <span className="text-black">= Small Prize</span></div>
+          <div className="flex items-center gap-2"><span className="text-2xl">🎯</span> <span className="text-black">= Medium Prize</span></div>
+          <div className="flex items-center gap-2"><span className="text-2xl">🏆</span> <span className="text-black">= Large Prize</span></div>
+          <div className="flex items-center gap-2"><span className="text-2xl">🌟</span> <span className="text-black">= Awardco Grand Prize</span></div>
         </div>
       </aside>
 
