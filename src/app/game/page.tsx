@@ -411,6 +411,17 @@ export default function GamePage() {
               );
             })}
         </div>
+        <div className="mt-auto pt-4 border-t border-gray-200">
+          <button
+            onClick={() => {
+              localStorage.removeItem('session');
+              router.push('/');
+            }}
+            className="w-full bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors duration-200"
+          >
+            Logout
+          </button>
+        </div>
       </aside>
 
       {/* Main game board */}

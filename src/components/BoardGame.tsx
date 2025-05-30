@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Space {
   id: number;
@@ -158,10 +159,16 @@ function calculateSpiralPosition(index: number, totalSpaces: number) {
 }
 
 const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numSpaces = 50, playerCharacter, players = [], characters = [] }) => {
+  const router = useRouter();
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [currentSpace, setCurrentSpace] = useState<Space | undefined>();
   const [showPrizePopup, setShowPrizePopup] = useState(false);
   const [prizeMessage, setPrizeMessage] = useState('');
+
+  const handleLogout = () => {
+    localStorage.removeItem('session');
+    router.push('/');
+  };
 
   // Function to get prize emoji based on description
   const getPrizeEmoji = (description: string) => {
@@ -198,26 +205,6 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
 
   return (
     <div className="overflow-visible p-2 bg-transparent flex flex-col items-center mx-auto">
-      {/* Prize Popup */}
-      {showPrizePopup && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 relative">
-            <button
-              onClick={() => setShowPrizePopup(false)}
-              className="absolute top-2 right-2 text-black hover:text-gray-800"
-            >
-              ✕
-            </button>
-            <div className="text-center">
-              <div className="text-4xl mb-4">{getPrizeEmoji(prizeMessage)}</div>
-              <h2 className="text-2xl font-bold mb-2 text-black">Congratulations!</h2>
-              <p className="text-xl mb-4 text-black">{prizeMessage}</p>
-              <p className="text-lg text-black">Show Kenzie L to claim your prize!</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="mb-4 text-center">
         <h2 className="text-2xl font-bold flex items-center justify-center gap-2 text-black">
           <span>🦆</span> Duck Adventure Map <span>🦆</span>
@@ -290,6 +277,26 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
           );
         })}
       </div>
+
+      {/* Prize Popup */}
+      {showPrizePopup && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 relative">
+            <button
+              onClick={() => setShowPrizePopup(false)}
+              className="absolute top-2 right-2 text-black hover:text-gray-800"
+            >
+              ✕
+            </button>
+            <div className="text-center">
+              <div className="text-4xl mb-4">{getPrizeEmoji(prizeMessage)}</div>
+              <h2 className="text-2xl font-bold mb-2 text-black">Congratulations!</h2>
+              <p className="text-xl mb-4 text-black">{prizeMessage}</p>
+              <p className="text-lg text-black">Show Kenzie L to claim your prize!</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
