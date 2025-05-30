@@ -281,14 +281,28 @@ export default function GamePage() {
                   }
                 }
                 if (userId) {
-                  const charObj = characters.find(c => c.id === 1); // Always use Duck character
-                  const charId = charObj ? charObj.id : 1;
-                  console.debug('Attempting to upsert position:', { userId, charId, newPosition });
-                  try {
-                    const result = await upsertPlayerPosition(userId, charId, newPosition);
-                    console.debug('upsertPlayerPosition result:', result);
-                  } catch (err) {
-                    console.error('upsertPlayerPosition error:', err);
+                  // Get the player's current character from the players array
+                  const currentPlayer = players.find(p => p.user_id === userId);
+                  const charId = currentPlayer?.character; // No default character
+                  if (charId !== undefined) {
+                    console.debug('Attempting to upsert position:', { userId, charId, newPosition });
+                    try {
+                      const result = await upsertPlayerPosition(userId, charId, newPosition);
+                      console.debug('upsertPlayerPosition result:', result);
+                      
+                      // Update the local players state
+                      setPlayers(prevPlayers => 
+                        prevPlayers.map(player => 
+                          player.user_id === userId 
+                            ? { ...player, position: newPosition, character: charId }
+                            : player
+                        )
+                      );
+                    } catch (err) {
+                      console.error('upsertPlayerPosition error:', err);
+                    }
+                  } else {
+                    console.error('No character found for user:', userId);
                   }
                 } else {
                   console.error('No userId found in session or database for upsert');
@@ -430,7 +444,7 @@ export default function GamePage() {
           <BoardGame
             currentPosition={currentPosition}
             playerName="Player"
-            playerCharacter="🦆"
+            playerCharacter=""
             players={players}
             characters={characters}
           />
