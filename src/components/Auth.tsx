@@ -74,7 +74,7 @@ const Auth = () => {
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-black">
-                Email
+                Name
               </label>
               <input
                 id="email"
