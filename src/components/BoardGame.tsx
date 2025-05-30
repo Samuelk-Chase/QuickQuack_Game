@@ -17,9 +17,7 @@ interface BoardGameProps {
   characters: { id: number; emoji: string; name: string }[];
 }
 
-// Define the path as a simple array of space configurations
 const SPACE_CONFIGS = [
-  // Start with a small spiral
   { id: 1, type: 'normal' as const },
   { id: 2, type: 'normal' as const },
   { id: 3, type: 'normal' as const },
@@ -170,7 +168,7 @@ const BoardGame: React.FC<BoardGameProps> = ({ currentPosition, playerName, numS
     if (description.includes('Small Prize')) return '🎁';
     if (description.includes('Medium Prize')) return '🎯';
     if (description.includes('Large Prize')) return '🏆';
-    if (description.includes('Random Prize')) return '🎲';
+    if (description.includes('Random Prize')) return '';
     if (description.includes('Awardco Grand Prize')) return '🌟';
     return '🎁';
   };

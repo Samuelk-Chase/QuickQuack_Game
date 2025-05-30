@@ -138,4 +138,42 @@ export async function getUserIdByEmail(email: string) {
     .single();
   if (error) throw error;
   return data?.id;
+}
+
+export async function checkPlayerPrizeExists(userId: string, spaceId: number): Promise<boolean> {
+  console.log(`[checkPlayerPrizeExists] Checking for userId: ${userId} (type: ${typeof userId}), spaceId: ${spaceId}`);
+  const { data, error } = await supabase
+    .from('PlayerPrizes')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('space_id', spaceId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+    console.error('Error checking for existing player prize:', error);
+    throw error;
+  }
+
+  return data !== null;
+}
+
+export async function insertPlayerPrize(userId: string, prizeType: string, prizeDescription: string, spaceId: number) {
+  console.log(`[insertPlayerPrize] Inserting prize for userId: ${userId} (type: ${typeof userId}), spaceId: ${spaceId}, prizeType: ${prizeType}, prizeDescription: ${prizeDescription}`);
+  const { data, error } = await supabase
+    .from('PlayerPrizes')
+    .insert([
+      {
+        user_id: userId,
+        prize_type: prizeType,
+        prize_description: prizeDescription,
+        space_id: spaceId,
+      }
+    ]);
+
+  if (error) {
+    console.error('Error inserting player prize:', error);
+    throw error;
+  }
+
+  return data;
 } 

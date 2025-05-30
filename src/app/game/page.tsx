@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BoardGame from '@/components/BoardGame';
-import { supabase, getAllPlayerPositions, subscribeToPlayerChanges, getAllPlayerNames, getAllPlayersWithPosition, getPlayerPosition, getUserIdByEmail } from '@/lib/supabase';
+import { supabase, getAllPlayerPositions, subscribeToPlayerChanges, getAllPlayerNames, getAllPlayersWithPosition, getPlayerPosition, getUserIdByEmail, insertPlayerPrize, checkPlayerPrizeExists } from '@/lib/supabase';
+import { SPACE_CONFIGS } from '@/lib/gameConfig';
 
 interface RollType {
   name: string;
@@ -206,6 +207,65 @@ export default function GamePage() {
         if (newIndex < pathSequence.length && pathSequence[newIndex] <= 100) {
           const newPosition = pathSequence[newIndex];
           setCurrentPosition(newPosition);
+
+          // Check if the new position is a prize space and record it if not already recorded
+          const landedSpace = SPACE_CONFIGS.find(space => space.id === newPosition);
+          if (landedSpace && landedSpace.type === 'prize') {
+            console.log(`Landed on a prize space! Space ID: ${newPosition}, Description: ${landedSpace.description}`);
+            (async () => {
+              const sessionStr = localStorage.getItem('session');
+              if (sessionStr) {
+                try {
+                  const session = JSON.parse(sessionStr);
+                  // Prioritize getting UUID from session.user.id if available
+                  let userId: string | null = session?.user?.id || session?.id || session?.user_id || null;
+                  console.log('Attempting to get userId from session. Initial userId:', userId);
+
+                  // If userId is still not a string (e.g., number from old session data), try getting it by email
+                  if (!userId || typeof userId !== 'string' && session?.email) {
+                    console.log('UserId not found or not string, attempting to get by email:', session?.email);
+                    try {
+                      const dbUserId = await getUserIdByEmail(session.email);
+                      if(dbUserId) userId = dbUserId; // Use the UUID from DB if found
+                      console.log('Got userId from DB by email:', userId);
+                    } catch (err) {
+                      console.error('Could not get userId by email for prize insert:', err);
+                    }
+                  }
+
+                  if (userId) {
+                    console.log('Checking if prize already exists for userId:', userId, 'and spaceId:', newPosition);
+                    // Check if the prize has already been awarded for this user and space
+                    const prizeExists = await checkPlayerPrizeExists(userId, newPosition);
+                    console.log('Prize exists check result:', prizeExists);
+
+                    if (!prizeExists) {
+                      // Use the actual prize type and description from the config
+                      const prizeType = landedSpace.description.includes('Small') ? 'Small Prize'
+                                      : landedSpace.description.includes('Medium') ? 'Medium Prize'
+                                      : landedSpace.description.includes('Large') ? 'Large Prize'
+                                      : landedSpace.description.includes('Random') ? 'Random Prize'
+                                      : landedSpace.description.includes('Grand') ? 'Grand Prize'
+                                      : 'Unknown Prize';
+
+                      await insertPlayerPrize(userId, prizeType, landedSpace.description, newPosition);
+                      console.log(`Recorded prize "${landedSpace.description}" for user ${userId} at space ${newPosition}`);
+                    } else {
+                      console.log(`Prize "${landedSpace.description}" at space ${newPosition} already recorded for user ${userId}`);
+                    }
+                  } else {
+                    console.error('No valid userId found in session or database for prize insert');
+                  }
+                } catch (error) {
+                  console.error('Error processing prize insertion logic:', error); // More general error catch
+                }
+              } else {
+                console.error('No sessionStr found in localStorage for prize insert logic.');
+                console.error('No session found in localStorage for prize insert');
+              }
+            })();
+          }
+
           // Async update after animation
           (async () => {
             const sessionStr = localStorage.getItem('session');
@@ -375,7 +435,6 @@ export default function GamePage() {
           <div className="flex items-center gap-2"><span className="text-2xl">🎁</span> <span>= Small Prize</span></div>
           <div className="flex items-center gap-2"><span className="text-2xl">🎯</span> <span>= Medium Prize</span></div>
           <div className="flex items-center gap-2"><span className="text-2xl">🏆</span> <span>= Large Prize</span></div>
-          <div className="flex items-center gap-2"><span className="text-2xl">🎲</span> <span>= Random Prize</span></div>
           <div className="flex items-center gap-2"><span className="text-2xl">🌟</span> <span>= Awardco Grand Prize</span></div>
         </div>
       </aside>
