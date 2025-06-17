@@ -91,7 +91,8 @@ export default function GamePage() {
     { id: 11, emoji: '🦨', name: 'Skunk' },
     { id: 12, emoji: '🦘', name: 'Kangaroo' },
     { id: 13, emoji: '🦙', name: 'Llama' },
-    { id: 14, emoji: '🦒', name: 'Giraffe' }
+    { id: 14, emoji: '🦒', name: 'Giraffe' },
+    { id: 15, emoji: '🦈', name: 'shark'},
   ];
 
   useEffect(() => {
