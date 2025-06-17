@@ -18,7 +18,8 @@ interface BoardGameProps {
   characters: { id: number; emoji: string; name: string }[];
 }
 
-const SPACE_CONFIGS = [
+export const SPACE_CONFIGS = [
+  // Start with a small spiral
   { id: 1, type: 'normal' as const },
   { id: 2, type: 'normal' as const },
   { id: 3, type: 'normal' as const },
@@ -42,7 +43,7 @@ const SPACE_CONFIGS = [
   { id: 21, type: 'normal' as const },
   { id: 22, type: 'normal' as const },
   { id: 23, type: 'normal' as const },
-  { id: 24, type: 'normal' as const },
+  { id: 24, type: 'prize' as const, description: 'Large Prize!', funEffect: 'sparkle' },
   { id: 25, type: 'normal' as const },
   { id: 26, type: 'normal' as const },
   { id: 27, type: 'normal' as const },
@@ -72,10 +73,10 @@ const SPACE_CONFIGS = [
   { id: 51, type: 'normal' as const },
   { id: 52, type: 'normal' as const },
   { id: 53, type: 'normal' as const },
-  { id: 54, type: 'normal' as const },
+  { id: 54, type: 'prize' as const, description: 'Small Prize!', funEffect: 'sparkle' },
   { id: 55, type: 'normal' as const },
   { id: 56, type: 'normal' as const },
-  { id: 57, type: 'normal' as const },
+  { id: 57,type: 'prize' as const, description: 'Large Prize!', funEffect: 'sparkle' },
   { id: 58, type: 'normal' as const },
   { id: 59, type: 'normal' as const },
   { id: 60, type: 'prize' as const, description: 'Small Prize!', funEffect: 'sparkle' },
@@ -93,7 +94,7 @@ const SPACE_CONFIGS = [
   { id: 72, type: 'normal' as const },
   { id: 73, type: 'normal' as const },
   { id: 74, type: 'normal' as const },
-  { id: 75, type: 'normal' as const},
+  { id: 75, type: 'prize' as const, description: 'Small Prize!', funEffect: 'sparkle' },
   { id: 76, type: 'normal' as const },
   { id: 77, type: 'normal' as const },
   { id: 78, type: 'normal' as const },
@@ -113,13 +114,13 @@ const SPACE_CONFIGS = [
   { id: 92, type: 'normal' as const },
   { id: 93, type: 'normal' as const },
   { id: 94, type: 'normal' as const },
-  { id: 95, type: 'normal' as const },
+  { id: 95, type: 'prize' as const, description: 'Medium Prize!', funEffect: 'sparkle' },
   { id: 96, type: 'normal' as const },
   { id: 97, type: 'normal' as const },
   { id: 98, type: 'normal' as const },
   { id: 99, type: 'normal' as const },
   { id: 100, type: 'prize' as const, description: 'Awardco Grand Prize!', funEffect: 'sparkle' }
-];
+]; 
 
 // Create a linked list of spaces
 function createSpaceList(configs: typeof SPACE_CONFIGS): Space[] {
